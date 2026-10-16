@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -43,3 +45,20 @@ class UserRepository:
         self.db.refresh(user)
 
         return user
+
+    def get_user_by_id(
+        self,
+        user_id: uuid.UUID
+    ) -> User:
+        return self.db.scalar(
+            select(User).where(User.id == user_id)
+        )
+
+    def update_user(self, user: User) -> User:
+        try:
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except:
+            self.db.rollback()
+            raise

@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.users.router import user_router
 
@@ -14,3 +15,9 @@ def root():
     return {
         "message": "Hello world"
     }
+
+app.mount(
+    "/media",
+    StaticFiles(directory="media", check_dir=False),
+    name="media",
+)

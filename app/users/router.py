@@ -1,8 +1,10 @@
-from fastapi import APIRouter, status, Depends
+import uuid
+
+from fastapi import APIRouter, status, Depends, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.users.schema import UserResponse, UserCreate
+from app.users.schema import UserResponse, UserCreate, UserUpdate
 from app.users.service import UserService
 
 user_router = APIRouter(
@@ -34,3 +36,37 @@ def create_user(
     service: UserService = Depends(get_user_service)
 ):
     return service.create_user(user)
+
+@user_router.get(
+    "/{user_id}",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_user(
+    user_id: str,
+    service: UserService = Depends(get_user_service),
+):
+    return service.get_user_by_id(user_id)
+
+@user_router.patch(
+    "/{user_id}",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_user(
+    user_id: str,
+    payload: UserUpdate,
+    service: UserService = Depends(get_user_service),
+):
+    return service.update_user(user_id, payload)
+
+@user_router.post(
+    "/{user_id}/profile-image",
+    response_model=UserResponse,
+)
+def upload_profile_image(
+    user_id: uuid.UUID,
+    file: UploadFile,
+    service: UserService = Depends(get_user_service),
+):
+    return service.upload_profile_image(user_id, file)

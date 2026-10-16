@@ -51,6 +51,12 @@ class User(Base):
         default=True,
     )
 
+    profile_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        default=None,
+    )
+
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
