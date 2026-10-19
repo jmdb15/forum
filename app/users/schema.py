@@ -1,3 +1,5 @@
+import uuid
+
 from datetime import date
 from typing import Optional
 
@@ -6,6 +8,7 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator, mo
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: uuid.UUID
     first_name: str
     last_name: str
     full_name: str
@@ -44,3 +47,32 @@ class UserCreate(BaseModel):
             raise ValueError("Passwords do not match")
         
         return self
+
+
+class UserUpdate(BaseModel):
+    first_name: Optional[str] = Field(
+        default=None, 
+        min_length=3,
+        max_length=100,
+    )
+
+    last_name: Optional[str] = Field(
+        default=None, 
+        min_length=3,
+        max_length=100,
+    )
+
+    email: Optional[EmailStr] = Field(
+        default=None, 
+        min_length=3,
+        max_length=100,
+    )
+
+    age: Optional[int] = Field(
+        default=None,
+        gt=12,
+    )
+
+    birthday: Optional[date] = Field(default=None,)
+
+    profile_url: Optional[str] = Field(default=None)

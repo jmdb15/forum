@@ -1,10 +1,13 @@
-from fastapi import HTTPException, status
+import uuid
+
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
+from app.core.storage import save_profile_image
 from app.db.database import get_db
 from app.users.models import User
-from app.users.schema import UserCreate
+from app.users.schema import UserCreate, UserUpdate
 from app.users.repository import UserRepository
 
 
@@ -40,3 +43,69 @@ class UserService:
         )
         
         return self.repository.create_user(new_user)
+
+    def get_user_by_id(self, user_id: uuid.UUID) -> User:
+        user = self.repository.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                detail="User ID does not exist",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        return user
+
+    def update_user(
+        self, 
+        user_id: uuid.UUID, 
+        payload: UserUpdate
+    ):
+        user = self.repository.get_user_by_id(user_id)
+        if user is None:
+            raise HTTPException(
+                detail="User ID does not exist",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        update_data = payload.model_dump(exclude_unset=True)
+
+        for field in ("first_name", "last_name", "email"):
+            if field in update_data and (
+                update_data[field] is None or update_data[field] == ""
+            ):
+                raise HTTPException(
+                    detail=f"{field} cannot be null or empty",
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                )
+
+        if 'email' in update_data:
+            existing_user = self.repository.exist_by_email(update_data['email'])
+
+            if existing_user and existing_user.id != user.id:
+                raise HTTPException(
+                    detail=f"Email already exists",
+                    status_code=status.HTTP_409_CONFLICT,
+                )                
+
+        for field, value in update_data.items():
+            setattr(user, field, value)
+
+        return self.repository.update_user(user)
+
+    def upload_profile_image(
+        self,
+        user_id: uuid.UUID,
+        file: UploadFile
+    ):
+        user = self.repository.get_user_by_id(user_id)
+
+        if user is None:
+            raise HTTPException(
+                detail="User ID does not exist",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        image_url = save_profile_image(file)
+
+        user.profile_url = image_url
+
+        return self.repository.update_user(user)
