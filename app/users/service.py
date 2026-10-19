@@ -1,13 +1,14 @@
 import uuid
 
-from fastapi import HTTPException, status, UploadFile
+from fastapi import HTTPException, status, UploadFile, Request
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
 from app.core.storage import save_profile_image
+from app.core.utils import build_image_url
 from app.db.database import get_db
 from app.users.models import User
-from app.users.schema import UserCreate, UserUpdate
+from app.users.schema import UserCreate, UserUpdate, UserResponse
 from app.users.repository import UserRepository
 
 
@@ -15,8 +16,19 @@ class UserService:
     def __init__(self, db: Session):
         self.repository = UserRepository(db)
 
-    def list_users(self):
-        return self.repository.list_users()
+    def list_users(self, request: Request):
+        users = self.repository.list_users()
+
+        response = []
+        for user in users:
+            item = UserResponse.model_validate(user)
+            item.profile_url = build_image_url(
+                item.profile_url,
+                str(request.base_url),
+            )
+            response.append(item)
+
+        return response
 
     def create_user(self, user: UserCreate):
         if self.repository.exist_by_email(user):

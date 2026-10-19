@@ -49,7 +49,7 @@ def save_profile_image(file: UploadFile) -> str:
 
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-    filename = f"{uuid.uuid4().hex()}{extension}"
+    filename = f"{uuid.uuid4().hex}{extension}"
     destination = UPLOAD_DIR / filename
 
     destination.write_bytes(data)

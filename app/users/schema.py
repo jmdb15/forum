@@ -16,6 +16,7 @@ class UserResponse(BaseModel):
     age: int | None
     birthday: date | None
     is_active: bool
+    profile_url: str | None
 
 
 class UserCreate(BaseModel):

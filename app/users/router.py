@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, status, Depends, UploadFile
+from fastapi import APIRouter, status, Depends, UploadFile, Request
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -22,9 +22,10 @@ def get_user_service(db: Session = Depends(get_db)):
     status_code=status.HTTP_200_OK,
 )
 def list_users(
+    request: Request,
     service: UserService = Depends(get_user_service)
 ):
-    return service.list_users()
+    return service.list_users(request)
 
 @user_router.post(
     "",
