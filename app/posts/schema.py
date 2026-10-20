@@ -59,4 +59,3 @@ class CreatePost(BaseModel):
             raise ValueError("Either content or image must be provided")
 
         return self
-
