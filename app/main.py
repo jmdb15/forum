@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.users.router import user_router
+from app.posts.router import post_router
 
 app = FastAPI(
     title="FastAPI Port",
@@ -9,6 +10,7 @@ app = FastAPI(
 )
 
 app.include_router(user_router, prefix="/api")
+app.include_router(post_router, prefix="/api")
 
 @app.get("/")
 def root():

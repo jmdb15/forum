@@ -2,7 +2,7 @@ import uuid
 from datetime import date 
 
 from sqlalchemy import String, Integer, Date, Uuid, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
 
@@ -55,6 +55,12 @@ class User(Base):
         String(500),
         nullable=True,
         default=None,
+    )
+
+    posts: Mapped[list["Post"]] = relationship(
+        "Post",
+        back_populates="author",
+        cascade="all, delete-orphan",
     )
 
     @property
