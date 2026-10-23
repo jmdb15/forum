@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, status, Depends, UploadFile, Request
+from fastapi import APIRouter, status, Depends, UploadFile, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -32,11 +32,12 @@ def list_users(
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_user(
+async def create_user(
     user: UserCreate,
+    background_tasks: BackgroundTasks,
     service: UserService = Depends(get_user_service)
 ):
-    return service.create_user(user)
+    return service.create_user(user, background_tasks)
 
 @user_router.get(
     "/{user_id}",

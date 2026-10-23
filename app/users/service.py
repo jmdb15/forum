@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import HTTPException, status, UploadFile, Request
+from fastapi import HTTPException, status, UploadFile, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
@@ -10,6 +10,7 @@ from app.db.database import get_db
 from app.users.models import User
 from app.users.schema import UserCreate, UserUpdate, UserResponse
 from app.users.repository import UserRepository
+from app.services.email_service import send_welcome_email
 
 
 class UserService:
@@ -28,9 +29,7 @@ class UserService:
             )
             response.append(item)
 
-        return response
-
-    def create_user(self, user: UserCreate):
+    def create_user(self, user: UserCreate, background_tasks: BackgroundTasks):
         if self.repository.exist_by_email(user):
             raise HTTPException(
                 detail="User already exists",
@@ -53,8 +52,14 @@ class UserService:
             age=user.age,
             birthday=user.birthday,
         )
-        
-        return self.repository.create_user(new_user)
+
+        user = self.repository.create_user(new_user)
+        background_tasks.add_task(
+            send_welcome_email,
+            user.email,
+            f"{user.first_name} {user.last_name}"
+        )
+        return user
 
     def get_user_by_id(self, user_id: uuid.UUID) -> User:
         user = self.repository.get_user_by_id(user_id)
